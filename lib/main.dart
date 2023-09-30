@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'history.dart';
 import 'navigator_keys.dart';
+import 'startpage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,7 +27,7 @@ void main() async {
   runApp(
     MaterialApp(
       title: 'Translation App',
-      home: const TranslationScreen(),
+      home: const StartPage(),
       navigatorKey: NavigatorKeys.rootNavigatorKey,
     ),
   );
