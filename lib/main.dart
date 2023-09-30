@@ -1,34 +1,39 @@
+// Import the necessary packages
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'history.dart'; // Import the HistoryScreen class
+import 'history.dart';
+import 'navigator_keys.dart';
 
 void main() async {
-  runApp(const MyApp());
-
   WidgetsFlutterBinding.ensureInitialized();
 
   await Supabase.initialize(
     url: 'https://qeoimipvamzaaucgkfbc.supabase.co',
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFlb2ltaXB2YW16YWF1Y2drZmJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTU4NDQwNTgsImV4cCI6MjAxMTQyMDA1OH0.vqlRpU1tStZ7OthXSKsQrsyOH7nCMoaXdw26v4VH5s8', // Replace with your Supabase anonymous key
   );
-}
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  // Allow both portrait and landscape orientations
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]);
 
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
+  runApp(
+    MaterialApp(
       title: 'Translation App',
-      home: TranslationScreen(),
-    );
-  }
+      home: const TranslationScreen(),
+      navigatorKey: NavigatorKeys.rootNavigatorKey,
+    ),
+  );
 }
 
 class TranslationScreen extends StatefulWidget {
-  const TranslationScreen({super.key});
+  const TranslationScreen({Key? key}) : super(key: key);
 
   @override
   _TranslationScreenState createState() => _TranslationScreenState();
@@ -37,7 +42,7 @@ class TranslationScreen extends StatefulWidget {
 class _TranslationScreenState extends State<TranslationScreen> {
   final TextEditingController textEditingController = TextEditingController();
   String translatedText = '';
-  final String apiKey = '519a068c-cd27-ab7c-c840-44b11ad9ab25:fx';
+  final String apiKey = '519a068c-cd27-ab7c-c840-44b11ad9ab25:fx'; // Replace with your DeepL API key
 
   Future<void> translateText() async {
     final String textToTranslate = textEditingController.text;
@@ -64,7 +69,6 @@ class _TranslationScreenState extends State<TranslationScreen> {
       try {
         final Map<String, dynamic> data = json.decode(response.body);
 
-        // Check if the 'translations' key is present in the JSON response
         if (data.containsKey('translations') &&
             data['translations'].isNotEmpty) {
           setState(() {
@@ -90,16 +94,22 @@ class _TranslationScreenState extends State<TranslationScreen> {
     }
   }
 
-  // Function to save translation to Supabase
   Future<void> saveTranslationToSupabase(String translation) async {
-    final response = await Supabase.instance.client
-        .from('translator')
-        .upsert([
+    final response = await Supabase.instance.client.from('translator').upsert([
       {
         'body': translation,
       }
-    ])
-        .execute();
+    ]).execute();
+  }
+
+  // Function to copy translated text to the clipboard
+  void copyToClipboard() {
+    Clipboard.setData(ClipboardData(text: translatedText));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Copied to clipboard: $translatedText'),
+      ),
+    );
   }
 
   @override
@@ -109,57 +119,63 @@ class _TranslationScreenState extends State<TranslationScreen> {
         title: const Text('Translation App'),
         actions: [
           IconButton(
-            icon: Icon(Icons.history), // Add a history button to the app bar
+            icon: const Icon(Icons.history),
             onPressed: () {
-              Navigator.push(
-                context,
+              NavigatorKeys.rootNavigatorKey.currentState?.push(
                 MaterialPageRoute(builder: (context) => HistoryScreen()),
               );
             },
           ),
         ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: TextField(
-                controller: textEditingController,
-                decoration: const InputDecoration(
-                  hintText: 'Enter text to translate',
+      body: SingleChildScrollView(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: TextField(
+                  controller: textEditingController,
+                  decoration: const InputDecoration(
+                    hintText: 'Enter text to translate',
+                  ),
                 ),
               ),
-            ),
-            ElevatedButton(
-              onPressed: translateText,
-              child: const Text('Translate'),
-            ),
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text(
-                'Translated Text:',
-                style: TextStyle(fontSize: 18),
+              ElevatedButton(
+                onPressed: translateText,
+                child: const Text('Translate'),
               ),
-            ),
-            Text(
-              translatedText,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // Call the function to save translation to Supabase
-                saveTranslationToSupabase(translatedText);
-              },
-              child: const Text('Save'),
-            ),
-          ],
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  'Translated Text:',
+                  style: TextStyle(fontSize: 18),
+                ),
+              ),
+              Text(
+                translatedText,
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  saveTranslationToSupabase(translatedText);
+                },
+                child: const Text('Save'),
+              ),
+              ElevatedButton(
+                onPressed: copyToClipboard,
+                child: const Text('Copy to Clipboard'), // Add a "Copy to Clipboard" button
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
+
+
 
 
 
