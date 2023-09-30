@@ -1,4 +1,3 @@
-// Import the necessary packages
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -96,9 +95,12 @@ class _TranslationScreenState extends State<TranslationScreen> {
   }
 
   Future<void> saveTranslationToSupabase(String translation) async {
+    final textToTranslate = textEditingController.text;
+    final formattedTranslation = '$textToTranslate - $translation';
+
     final response = await Supabase.instance.client.from('translator').upsert([
       {
-        'body': translation,
+        'body': formattedTranslation,
       }
     ]).execute();
   }
@@ -123,7 +125,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
             icon: const Icon(Icons.history),
             onPressed: () {
               NavigatorKeys.rootNavigatorKey.currentState?.push(
-                MaterialPageRoute(builder: (context) => HistoryScreen()),
+                MaterialPageRoute(builder: (context) => const HistoryScreen()),
               );
             },
           ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HistoryScreen extends StatefulWidget {
-  const HistoryScreen({super.key});
+  const HistoryScreen({Key? key}) : super(key: key);
 
   @override
   _HistoryScreenState createState() => _HistoryScreenState();
@@ -19,11 +19,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
       setState(() {
         translations = rawData.map((dynamic item) {
-          if (item is Map<String, dynamic>) {
-            return item as Map<String, dynamic>;
-          } else {
-            return <String, dynamic>{'body': 'Error: Invalid data'};
+          if (item is Map<String, dynamic> && item.containsKey('body')) {
+            final formattedTranslation = item['body'] as String;
+            final parts = formattedTranslation.split(' - ');
+
+            if (parts.length == 2) {
+              return <String, dynamic>{
+                'originalText': parts[0],
+                'translatedText': parts[1],
+              };
+            }
           }
+          return <String, dynamic>{'originalText': 'Error', 'translatedText': 'Invalid data'};
         }).toList();
       });
     }
@@ -51,9 +58,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
               child: ListView.builder(
                 itemCount: translations.length,
                 itemBuilder: (context, index) {
-                  final translation = translations[index]['body'];
+                  final originalText = translations[index]['originalText'];
+                  final translatedText = translations[index]['translatedText'];
                   return ListTile(
-                    title: Text(translation),
+                    title: Text('$originalText - $translatedText'),
                   );
                 },
               ),
@@ -64,3 +72,5 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 }
+
+
