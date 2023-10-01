@@ -11,18 +11,20 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   List<Map<String, dynamic>> translations = [];
 
+  // Function to fetch translations from Supabase
   Future<void> fetchTranslations() async {
     final response = await Supabase.instance.client.from('translator').select().execute();
 
+    // Check if the response contains data
     if (response.data != null) {
       final List<dynamic> rawData = response.data as List<dynamic>;
-
       setState(() {
+        // Map the raw data to a list of maps
         translations = rawData.map((dynamic item) {
           if (item is Map<String, dynamic> && item.containsKey('body')) {
             final formattedTranslation = item['body'] as String;
             final parts = formattedTranslation.split(' - ');
-
+           // Check if the translation is valid
             if (parts.length == 2) {
               return <String, dynamic>{
                 'originalText': parts[0],
@@ -30,6 +32,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               };
             }
           }
+          // If the translation is invalid, return an error message
           return <String, dynamic>{'originalText': 'Error', 'translatedText': 'Invalid data'};
         }).toList();
       });

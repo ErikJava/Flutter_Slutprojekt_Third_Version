@@ -10,6 +10,7 @@ import 'startpage.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Supabase initialization with API key
   await Supabase.initialize(
     url: 'https://qeoimipvamzaaucgkfbc.supabase.co',
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFlb2ltaXB2YW16YWF1Y2drZmJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTU4NDQwNTgsImV4cCI6MjAxMTQyMDA1OH0.vqlRpU1tStZ7OthXSKsQrsyOH7nCMoaXdw26v4VH5s8', // Replace with your Supabase anonymous key
@@ -39,22 +40,26 @@ class TranslationScreen extends StatefulWidget {
   _TranslationScreenState createState() => _TranslationScreenState();
 }
 
+// API key for DeepL
 class _TranslationScreenState extends State<TranslationScreen> {
   final TextEditingController textEditingController = TextEditingController();
   String translatedText = '';
-  final String apiKey = '519a068c-cd27-ab7c-c840-44b11ad9ab25:fx'; // Replace with your DeepL API key
+  final String apiKey = '519a068c-cd27-ab7c-c840-44b11ad9ab25:fx';
 
+  // Function to translate text from English to Swedish
   Future<void> translateText() async {
     final String textToTranslate = textEditingController.text;
     const String targetLanguage = 'SV'; // Swedish
     const String sourceLanguage = 'EN'; // English
 
+    // DeepL API endpoint
     const String url =
-        'https://api-free.deepl.com/v2/translate'; // Updated endpoint URL
+        'https://api-free.deepl.com/v2/translate';
     final Map<String, String> headers = {
       'Content-Type': 'application/x-www-form-urlencoded',
     };
 
+    // Request body with text to translate, source and target languages, and API key
     final Map<String, dynamic> body = {
       'text': textToTranslate,
       'source_lang': sourceLanguage,
@@ -62,13 +67,16 @@ class _TranslationScreenState extends State<TranslationScreen> {
       'auth_key': apiKey,
     };
 
+    // Send a POST request to the DeepL API
     final response =
     await http.post(Uri.parse(url), headers: headers, body: body);
 
+    // Check if the response is successful
     if (response.statusCode == 200) {
       try {
         final Map<String, dynamic> data = json.decode(response.body);
 
+        // Check if the response contains translation data. If so, display it. Otherwise, display an error message.
         if (data.containsKey('translations') &&
             data['translations'].isNotEmpty) {
           setState(() {
@@ -94,6 +102,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
     }
   }
 
+  // Function to save translated text to Supabase
   Future<void> saveTranslationToSupabase(String translation) async {
     final textToTranslate = textEditingController.text;
     final formattedTranslation = '$textToTranslate - $translation';
