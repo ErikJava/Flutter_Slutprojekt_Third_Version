@@ -24,7 +24,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           if (item is Map<String, dynamic> && item.containsKey('body')) {
             final formattedTranslation = item['body'] as String;
             final parts = formattedTranslation.split(' - ');
-           // Check if the translation is valid
+            // Check if the translation is valid
             if (parts.length == 2) {
               return <String, dynamic>{
                 'originalText': parts[0],

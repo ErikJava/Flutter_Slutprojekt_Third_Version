@@ -107,12 +107,23 @@ class _TranslationScreenState extends State<TranslationScreen> {
     final textToTranslate = textEditingController.text;
     final formattedTranslation = '$textToTranslate - $translation';
 
-    final response = await Supabase.instance.client.from('translator').upsert([
+    await Supabase.instance.client
+        .from('translator')
+        .upsert([
       {
         'body': formattedTranslation,
       }
-    ]).execute();
+    ])
+        .then((response) {
+      // Handle the response here if needed
+      print('Upsert operation completed');
+    })
+        .catchError((error) {
+      // Handle errors if any
+      print('Error during upsert: $error');
+    });
   }
+
 
   // Function to copy translated text to the clipboard
   void copyToClipboard() {
